@@ -1,0 +1,79 @@
+.qodo
+# Node.js / MERN App
+node_modules/
+dist/
+build/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pid
+*.seed
+*.pid.lock
+
+# Clothes-VTON Model
+# Ignore large data directories and generated outputs (uncomment if you want to exclude them entirely)
+ data/
+ result/
+# results/
+# checkpoints/
+
+# Specific Clothes-VTON exclusions (commented out; uncomment if you want to ignore these)
+# data/viton_resize/
+# results/tom_output/
+# warp-mask/
+# warp-cloth/
+
+# Keep specific checkpoints or results if needed (force include)
+!checkpoints/gmm_train_new/gmm_final.pth
+!checkpoints/tom_train_new/tom_final.pth
+!results/tom_output/tom_final.pth/test/try-on/
+
+# Python-specific ignores
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+
+# MATLAB-specific ignores
+*.mex*
+*.mat~
+*.asv
+
+# Development tools
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Temporary files
+*.bak
+*.tmp
+*.temp
+
+# Dependency caches
+.npm/
+.yarn/
+.pnpm-store/
+
+# Testing and coverage
+coverage/
+*.lcov
+.nyc_output/
