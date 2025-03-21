@@ -1,44 +1,92 @@
+// app.js
 import express from "express";
 import multer from "multer";
 import fs from "fs/promises";
 import cors from "cors";
+import mongoose from "mongoose";
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const connectDB = async () => {
+  try {
+    mongoose.connection.on('connected', () => console.log("MongoDB is connected"));
+    mongoose.connection.on('error', (err) => console.error(`MongoDB connection error: ${err}`));
+    await mongoose.connect(`${process.env.MONGODB_URI}/e-commerce`);
+  } catch (error) {
+    console.error(`Error connecting to MongoDB: ${error.message}`);
+    process.exit(1);
+  }
+};
+
+const productSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  description: { type: String, required: true },
+  price: { type: Number, required: true },
+  image: { type: Array, required: true },
+  category: { type: String, required: true },
+  subCategory: { type: String, required: true },
+  bestseller: { type: Boolean, default: false },
+  sizes: { type: [String], default: [] },
+  date: { type: Date, default: Date.now },
+});
+
+const Product = mongoose.models.product || mongoose.model("product", productSchema);
 
 const app = express();
 const PORT = 5050;
 
-// Middleware
+connectDB();
+
 app.use(cors());
 app.use(express.json());
 
-// Multer for handling file uploads
 const upload = multer({ dest: "uploads/" });
 
-// Route to handle virtual try-on
-app.post("/api/tryon", upload.single("personImage"), async (req, res) => {
+app.get("/api/products/:id", async (req, res) => {
   try {
-    const { garmentImageUrl } = req.body;
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ error: "Product not found" });
+    res.status(200).json(product);
+  } catch (error) {
+    console.error("Error fetching product:", error);
+    res.status(500).json({ error: "Failed to fetch product" });
+  }
+});
 
+app.post("/api/tryon/:productId", upload.single("personImage"), async (req, res) => {
+  try {
+    const { productId } = req.params;
+    
+    // Fetch product from database
+    const product = await Product.findById(productId);
+    if (!product || !product.image || !product.image.length) {
+      return res.status(404).json({ error: "Product or product image not found" });
+    }
+    
+    // Get the first image from the product's image array
+    const garmentImageUrl = product.image[0];
+    
     // Extract uploaded person image
     const personImagePath = req.file.path;
     const personImage = await fs.readFile(personImagePath);
-
-    // Fetch the garment image from the provided URL
-    const garmentImageResponse = await fetch(garmentImageUrl);
-    if (!garmentImageResponse.ok) {
-      throw new Error(`Failed to fetch garment image: ${garmentImageResponse.statusText}`);
+    
+    // Fetch the garment image from the URL
+    const response = await fetch(garmentImageUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch garment image: ${response.statusText}`);
     }
-    const garmentImageBuffer = Buffer.from(await garmentImageResponse.arrayBuffer());
-
-    // Dynamically import the Gradio client
+    const garmentImageBuffer = await response.arrayBuffer();
+    const garmentImage = Buffer.from(garmentImageBuffer);
+    
+    // Dynamically import Gradio client
     const { client } = await import("@gradio/client");
-
-    // Initialize Gradio client
     const appClient = await client("paroksh-mason/Virtual-Try-On");
-
-    // Call the /tryon endpoint
+    
+    // Call the virtual try-on endpoint
     const result = await appClient.predict("/tryon", [
-      personImage, // Blob | File | Buffer for "Human Mask"
-      garmentImageBuffer, // Blob | File | Buffer for "Garment"
+      personImage,
+      garmentImage,
       "Hello!!",
       null,
       true,
@@ -46,31 +94,30 @@ app.post("/api/tryon", upload.single("personImage"), async (req, res) => {
       20,
       20,
     ]);
-
-    // Extract URLs from the API response
-    const [outputImageObj, maskedImageObj] = result.data;
-
-    // Ensure the objects have valid `url` properties
+    
+    const [outputImageObj] = result.data;
     const outputImageUrl = outputImageObj?.url;
-    const maskedImageUrl = maskedImageObj?.url;
-
+    
     if (!outputImageUrl || typeof outputImageUrl !== "string") {
       throw new Error("Invalid or missing URL for output image");
     }
-
-    if (!maskedImageUrl || typeof maskedImageUrl !== "string") {
-      throw new Error("Invalid or missing URL for masked image");
-    }
-
-    // Return the URLs to the frontend
-    res.json({ outputImageUrl, maskedImageUrl });
+    
+    res.json({
+      outputImageUrl,
+      productDetails: {
+        name: product.name,
+        image: product.image[0],
+        price: product.price
+      }
+    });
+    
+    await fs.unlink(personImagePath);
   } catch (error) {
     console.error("Error processing virtual try-on:", error);
-    res.status(500).json({ error: "Failed to process virtual try-on" });
+    res.status(500).json({ error: "Failed to process virtual try-on", details: error.message });
   }
 });
 
-// Start the server
 app.listen(PORT, () => {
-  console.log(`Backend running on http://localhost:${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });
