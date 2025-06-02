@@ -18,13 +18,32 @@ A cutting-edge e-commerce platform featuring AI-powered virtual try-on technolog
 
 ```mermaid
 graph TD
-    A[Client/Frontend] -->|HTTP/REST| B[Backend API]
-    B -->|Data Management| C[(Database)]
-    B -->|Authentication| D[Auth Service]
-    A -->|WebSocket| E[VTON Service]
-    E -->|AI Processing| F[Virtual Try-On Model]
-    B -->|Admin Access| G[Admin Panel]
-    H[Payment Gateway] -->|Transaction| B
+    subgraph Client[Client Layer]
+        A[Web Frontend] -->|HTTP/REST| B[Backend API]
+        A -->|WebSocket| V[VTON Service]
+    end
+
+    subgraph Backend[Backend Services]
+        B -->|Data Management| C[(Database)]
+        B -->|Authentication| D[Auth Service]
+        B -->|Product Management| E[Product Service]
+        B -->|User Management| F[User Service]
+        B -->|Admin Access| G[Admin Panel]
+        H[Payment Gateway] -->|Transaction| B
+    end
+
+    subgraph VTON[VTON Service Layer]
+        V -->|Image Processing| V1[Image Preprocessor]
+        V1 -->|Person Parsing| V2[Human Parser]
+        V1 -->|Cloth Masking| V3[Cloth Mask Generator]
+        V2 & V3 --> V4[CP-VTON Model]
+        V4 -->|Result| V5[Post Processor]
+        V5 -->|WebSocket| A
+    end
+
+    style Client fill:#f9f,stroke:#333,stroke-width:2px
+    style Backend fill:#bbf,stroke:#333,stroke-width:2px
+    style VTON fill:#bfb,stroke:#333,stroke-width:2px
 ```
 
 ## 🤖 AI Architecture - Virtual Try-On Model
@@ -235,17 +254,39 @@ Our implementation uses the following key improvements:
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License
+
+Copyright (c) 2024 Virtual Try-On E-Commerce Platform
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
 ## 👥 Contributors
 
-- [Contributor 1]
+- Mihisara Nithadya (mihisaranithadya@gmail.com)
 - [Contributor 2]
 - [Contributor 3]
 
 ## 📞 Support
 
-For support, email [support@email.com] or join our Slack channel.
+For technical support and inquiries, please contact:
+- Email: mihisaranithadya@gmail.com
+- Project Repository: [GitHub Repository URL]
 
 ---
 
