@@ -450,8 +450,8 @@ SOFTWARE.
 ## 👥 Contributors
 
 - Mihisara Nithadya (mihisaranithadya@gmail.com)
-- [Contributor 2]
-- [Contributor 3]
+- Devnath Jayasekara (jmdevnath@gmail.com)
+- Prabhath Subashana (prabhathsubhashana18@gmail.com)
 
 ## 📞 Support
 
